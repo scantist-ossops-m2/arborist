@@ -1912,6 +1912,100 @@ ArboristNode {
 }
 `
 
+exports[`test/arborist/reify.js TAP collide case-variant dep names > tree 1 1`] = `
+ArboristNode {
+  "children": Map {
+    "abbrev" => ArboristNode {
+      "edgesIn": Set {
+        EdgeIn {
+          "from": "",
+          "name": "abbrev",
+          "spec": "1",
+          "type": "prod",
+        },
+      },
+      "location": "node_modules/abbrev",
+      "name": "abbrev",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-collide-case-variant-dep-names/node_modules/abbrev",
+      "resolved": "https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz",
+      "version": "1.1.1",
+    },
+  },
+  "edgesOut": Map {
+    "abbrev" => EdgeOut {
+      "name": "abbrev",
+      "spec": "1",
+      "to": "node_modules/abbrev",
+      "type": "prod",
+    },
+  },
+  "fsChildren": Set {
+    ArboristNode {
+      "dev": true,
+      "extraneous": true,
+      "location": "target",
+      "name": "target",
+      "optional": true,
+      "packageName": "ABBREV",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-collide-case-variant-dep-names/target",
+      "peer": true,
+      "version": "1.0.0",
+    },
+  },
+  "isProjectRoot": true,
+  "location": "",
+  "name": "tap-testdir-reify-collide-case-variant-dep-names",
+  "path": "{CWD}/test/arborist/tap-testdir-reify-collide-case-variant-dep-names",
+}
+`
+
+exports[`test/arborist/reify.js TAP collide case-variant dep names > tree 2 1`] = `
+ArboristNode {
+  "children": Map {
+    "abbrev" => ArboristNode {
+      "edgesIn": Set {
+        EdgeIn {
+          "from": "",
+          "name": "abbrev",
+          "spec": "^1.1.1",
+          "type": "prod",
+        },
+      },
+      "location": "node_modules/abbrev",
+      "name": "abbrev",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-collide-case-variant-dep-names/node_modules/abbrev",
+      "resolved": "https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz",
+      "version": "1.1.1",
+    },
+  },
+  "edgesOut": Map {
+    "abbrev" => EdgeOut {
+      "name": "abbrev",
+      "spec": "^1.1.1",
+      "to": "node_modules/abbrev",
+      "type": "prod",
+    },
+  },
+  "fsChildren": Set {
+    ArboristNode {
+      "dev": true,
+      "extraneous": true,
+      "location": "target",
+      "name": "target",
+      "optional": true,
+      "packageName": "ABBREV",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-collide-case-variant-dep-names/target",
+      "peer": true,
+      "version": "1.0.0",
+    },
+  },
+  "isProjectRoot": true,
+  "location": "",
+  "name": "tap-testdir-reify-collide-case-variant-dep-names",
+  "path": "{CWD}/test/arborist/tap-testdir-reify-collide-case-variant-dep-names",
+}
+`
+
 exports[`test/arborist/reify.js TAP create link deps > expect resolving Promise 1`] = `
 ArboristNode {
   "children": Map {
@@ -4530,6 +4624,74 @@ exports[`test/arborist/reify.js TAP modules bundled by the root should be instal
   "version": "1.2.3"
 }
 
+`
+
+exports[`test/arborist/reify.js TAP move aside symlink clutter > must match snapshot 1`] = `
+ArboristNode {
+  "children": Map {
+    "abbrev" => ArboristNode {
+      "edgesIn": Set {
+        EdgeIn {
+          "from": "",
+          "name": "abbrev",
+          "spec": "latest",
+          "type": "prod",
+        },
+      },
+      "location": "node_modules/abbrev",
+      "name": "abbrev",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-move-aside-symlink-clutter/node_modules/abbrev",
+      "resolved": "https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz",
+      "version": "1.1.1",
+    },
+  },
+  "edgesOut": Map {
+    "abbrev" => EdgeOut {
+      "name": "abbrev",
+      "spec": "latest",
+      "to": "node_modules/abbrev",
+      "type": "prod",
+    },
+  },
+  "isProjectRoot": true,
+  "location": "",
+  "name": "tap-testdir-reify-move-aside-symlink-clutter",
+  "path": "{CWD}/test/arborist/tap-testdir-reify-move-aside-symlink-clutter",
+}
+`
+
+exports[`test/arborist/reify.js TAP move aside symlink clutter > must match snapshot 2`] = `
+ArboristNode {
+  "children": Map {
+    "abbrev" => ArboristNode {
+      "edgesIn": Set {
+        EdgeIn {
+          "from": "",
+          "name": "abbrev",
+          "spec": "latest",
+          "type": "prod",
+        },
+      },
+      "location": "node_modules/abbrev",
+      "name": "abbrev",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-move-aside-symlink-clutter/node_modules/abbrev",
+      "resolved": "https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz",
+      "version": "1.1.1",
+    },
+  },
+  "edgesOut": Map {
+    "abbrev" => EdgeOut {
+      "name": "abbrev",
+      "spec": "latest",
+      "to": "node_modules/abbrev",
+      "type": "prod",
+    },
+  },
+  "isProjectRoot": true,
+  "location": "",
+  "name": "tap-testdir-reify-move-aside-symlink-clutter",
+  "path": "{CWD}/test/arborist/tap-testdir-reify-move-aside-symlink-clutter",
+}
 `
 
 exports[`test/arborist/reify.js TAP multiple bundles at the same level > must match snapshot 1`] = `
@@ -16569,6 +16731,51 @@ exports[`test/arborist/reify.js TAP no saveType: peer only > must match snapshot
 
 exports[`test/arborist/reify.js TAP no saveType: prod w/ peer > must match snapshot 1`] = `
 {"dependencies":{"abbrev":"^1.1.1"}}
+`
+
+exports[`test/arborist/reify.js TAP node_modules may not be a symlink > must match snapshot 1`] = `
+ArboristNode {
+  "children": Map {
+    "abbrev" => ArboristNode {
+      "edgesIn": Set {
+        EdgeIn {
+          "from": "",
+          "name": "abbrev",
+          "spec": "*",
+          "type": "prod",
+        },
+      },
+      "location": "node_modules/abbrev",
+      "name": "abbrev",
+      "path": "{CWD}/test/arborist/tap-testdir-reify-node_modules-may-not-be-a-symlink/node_modules/abbrev",
+      "resolved": "https://registry.npmjs.org/abbrev/-/abbrev-1.1.1.tgz",
+      "version": "1.1.1",
+    },
+  },
+  "edgesOut": Map {
+    "abbrev" => EdgeOut {
+      "name": "abbrev",
+      "spec": "*",
+      "to": "node_modules/abbrev",
+      "type": "prod",
+    },
+  },
+  "isProjectRoot": true,
+  "location": "",
+  "name": "tap-testdir-reify-node_modules-may-not-be-a-symlink",
+  "path": "{CWD}/test/arborist/tap-testdir-reify-node_modules-may-not-be-a-symlink",
+}
+`
+
+exports[`test/arborist/reify.js TAP node_modules may not be a symlink > must match snapshot 2`] = `
+Array [
+  Array [
+    "warn",
+    "reify",
+    "Removing non-directory",
+    "{CWD}/test/arborist/tap-testdir-reify-node_modules-may-not-be-a-symlink/node_modules",
+  ],
+]
 `
 
 exports[`test/arborist/reify.js TAP omit peer deps > finished timers 1`] = `

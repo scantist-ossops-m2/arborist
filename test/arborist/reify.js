@@ -1,4 +1,4 @@
-const {resolve} = require('path')
+const {resolve, basename} = require('path')
 const t = require('tap')
 const runScript = require('@npmcli/run-script')
 
@@ -110,7 +110,7 @@ const fixture = (t, p) => require('../fixtures/reify-cases/' + p)(t)
 
 const printReified = (path, opt) => reify(path, opt).then(printTree)
 
-const newArb = opt => new Arborist({
+const newArb = (opt) => new Arborist({
   audit: false,
   cache,
   registry,
@@ -1013,7 +1013,7 @@ t.test('saving the ideal tree', t => {
   t.end()
 })
 
-t.test('scoped registries', t => {
+t.test('scoped registries', async t => {
   const path = t.testdir()
 
   // this is a very artifical test that is setting a lot of internal things
@@ -1021,9 +1021,10 @@ t.test('scoped registries', t => {
   // resolved data for pacote.extract is working as intended, alternatively
   // we might prefer to replace this with a proper parallel alternative
   // registry server so that we can have more of an integration test instead
-  t.plan(1)
+  let sawPacoteExtract = false
   const pacote = {
     extract: res => {
+      sawPacoteExtract = true
       t.matchSnapshot(
         res,
         'should preserve original resolved value'
@@ -1042,14 +1043,17 @@ t.test('scoped registries', t => {
     registry,
   })
   const kReify = Symbol.for('reifyNode')
+  a.idealTree = new Node({ path })
 
   const node = new Node({
     name: '@ruyadorno/theoretically-private-pkg',
     resolved: 'https://npm.pkg.github.com/@ruyadorno/' +
       'theoretically-private-pkg/-/theoretically-private-pkg-1.2.3.tgz',
     pkg: { version: '1.2.3', name: '@ruyadorno/theoretically-private-pkg' },
+    parent: a.idealTree,
   })
-  a[kReify](node)
+  await a[kReify](node)
+  t.equal(sawPacoteExtract, true, 'saw pacote extraction')
 })
 
 t.test('bin links adding and removing', t => {
@@ -2124,4 +2128,179 @@ t.test('shrinkwrap which lacks metadata updates deps', async t => {
     .children.get('abbrev')
   t.equal(secondAbbrev.version, '1.1.1')
   t.equal(abbrevpj().version, secondAbbrev.version)
+})
+
+t.test('move aside symlink clutter', async t => {
+  // have to make the clutter manually, because we collide packages based
+  // on case-insensitive names, so the ABBREV folder would be removed.
+  // not sure how this would ever happen, but defense in depth.
+  const kReifyPackages = Symbol.for('reifyPackages')
+  const reifyPackages = Arborist.prototype[kReifyPackages]
+  Arborist.prototype[kReifyPackages] = async function () {
+    fs.mkdirSync(path + '/node_modules')
+    fs.symlinkSync('../target', path + '/node_modules/ABBREV')
+    Arborist.prototype[kReifyPackages] = reifyPackages
+    return this[kReifyPackages]()
+  }
+
+  const path = t.testdir({
+    'package.json': JSON.stringify({
+      dependencies: {
+        abbrev: 'latest',
+      },
+    }),
+    target: {
+      file: 'do not delete me please',
+      'package.json': JSON.stringify({ name: 'ABBREV', version: '1.0.0' }),
+    },
+    'sensitivity-test': t.fixture('symlink', './target'),
+  })
+
+  // check to see if we're on a case-insensitive fs
+  try {
+    const st = fs.lstatSync(path + '/SENSITIVITY-TEST')
+    t.equal(st.isSymbolicLink(), true, 'fs is case insensitive')
+  } catch (er) {
+    t.plan(0, 'case sensitive file system, test not relevant')
+    return
+  }
+
+  const tree = await printReified(path)
+  const st = fs.lstatSync(path + '/node_modules/abbrev')
+  t.equal(st.isSymbolicLink(), false)
+  t.equal(st.isDirectory(), true)
+  const realName = basename(fs.realpathSync.native(path + '/node_modules/abbrev'))
+  t.equal(realName, 'abbrev', 'lowercase form is the winner')
+  t.equal(fs.readFileSync(path + '/target/file', 'utf8'),
+    'do not delete me please')
+  const linkPJ = fs.readFileSync(path + '/target/package.json', 'utf8')
+  t.strictSame(JSON.parse(linkPJ), {
+    name: 'ABBREV',
+    version: '1.0.0',
+  })
+  const abbrevPJ = fs.readFileSync(path + '/node_modules/abbrev/package.json', 'utf8')
+  t.match(JSON.parse(abbrevPJ), {
+    name: 'abbrev',
+    version: '1.1.1',
+  })
+
+  t.matchSnapshot(tree)
+})
+
+t.test('collide case-variant dep names', async t => {
+  const path = t.testdir({
+    'package.json': JSON.stringify({
+      dependencies: {
+        ABBREV: 'file:target',
+        abbrev: '1',
+      },
+    }),
+    target: {
+      file: 'do not delete me please',
+      'package.json': JSON.stringify({ name: 'ABBREV', version: '1.0.0' }),
+    },
+    node_modules: {
+      ABBREV: t.fixture('symlink', '../target'),
+    },
+  })
+
+  const tree = await printReified(path)
+  const st = fs.lstatSync(path + '/node_modules/abbrev')
+  t.equal(st.isSymbolicLink(), false)
+  const realName = basename(fs.realpathSync.native(path + '/node_modules/abbrev'))
+  t.equal(realName, 'abbrev', 'lowercase form is the winner')
+  t.equal(fs.readFileSync(path + '/target/file', 'utf8'),
+    'do not delete me please')
+  const linkPJ = fs.readFileSync(path + '/target/package.json', 'utf8')
+  t.strictSame(JSON.parse(linkPJ), {
+    name: 'ABBREV',
+    version: '1.0.0',
+  })
+
+  t.matchSnapshot(tree, 'tree 1')
+  const tree2 = await printReified(path, { add: ['abbrev@latest'] })
+  t.matchSnapshot(tree2, 'tree 2')
+  const linkPJ2 = fs.readFileSync(path + '/target/package.json', 'utf8')
+  t.strictSame(JSON.parse(linkPJ2), {
+    name: 'ABBREV',
+    version: '1.0.0',
+  }, 'target was not overwritten')
+  t.equal(fs.readFileSync(path + '/target/file', 'utf8'),
+    'do not delete me please')
+  const abbrevPJ = fs.readFileSync(path + '/node_modules/abbrev/package.json', 'utf8')
+  t.match(JSON.parse(abbrevPJ), {
+    name: 'abbrev',
+    version: '1.1.1',
+  })
+})
+
+t.test('move aside symlink clutter', async t => {
+  // have to make the clutter manually, because we collide packages based
+  // on case-insensitive names, so the ABBREV folder would be removed.
+  // not sure how this would ever happen, but defense in depth.
+  const kReifyPackages = Symbol.for('reifyPackages')
+  const reifyPackages = Arborist.prototype[kReifyPackages]
+  Arborist.prototype[kReifyPackages] = async function () {
+    fs.mkdirSync(path + '/node_modules')
+    fs.symlinkSync('../target', path + '/node_modules/ABBREV')
+    Arborist.prototype[kReifyPackages] = reifyPackages
+    return this[kReifyPackages]()
+  }
+
+  const path = t.testdir({
+    'package.json': JSON.stringify({
+      dependencies: {
+        abbrev: 'latest',
+      },
+    }),
+    target: {
+      file: 'do not delete me please',
+      'package.json': JSON.stringify({ name: 'ABBREV', version: '1.0.0' }),
+    },
+    'sensitivity-test': t.fixture('symlink', './target'),
+  })
+
+  // check to see if we're on a case-insensitive fs
+  try {
+    const st = fs.lstatSync(path + '/SENSITIVITY-TEST')
+    t.equal(st.isSymbolicLink(), true, 'fs is case insensitive')
+  } catch (er) {
+    t.plan(0, 'case sensitive file system, test not relevant')
+    return
+  }
+
+  const tree = await printReified(path)
+  const st = fs.lstatSync(path + '/node_modules/abbrev')
+  t.equal(st.isSymbolicLink(), false)
+  t.equal(st.isDirectory(), true)
+  t.equal(fs.readFileSync(path + '/target/file', 'utf8'),
+    'do not delete me please')
+  const linkPJ = fs.readFileSync(path + '/target/package.json', 'utf8')
+  t.strictSame(JSON.parse(linkPJ), {
+    name: 'ABBREV',
+    version: '1.0.0',
+  })
+  const abbrevPJ = fs.readFileSync(path + '/node_modules/abbrev/package.json', 'utf8')
+  t.match(JSON.parse(abbrevPJ), {
+    name: 'abbrev',
+    version: '1.1.1',
+  })
+
+  t.matchSnapshot(tree)
+})
+
+t.test('node_modules may not be a symlink', async t => {
+  const path = t.testdir({
+    target: {},
+    node_modules: t.fixture('symlink', 'target'),
+    'package.json': JSON.stringify({
+      dependencies: {
+        abbrev: '',
+      },
+    }),
+  })
+  const warnings = warningTracker()
+  const tree = await printReified(path)
+  t.matchSnapshot(tree)
+  t.matchSnapshot(warnings())
 })
